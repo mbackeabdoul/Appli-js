@@ -59,7 +59,7 @@
                 <div class="modal-dialog">
                 <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Modal title</h5>
+                    <h5 class="modal-title">Ajouter Etudiants</h5>
     
              <!-- ‹button type="button" class="btn-close"
              data-bs-dismiss="modal" aria-label="Close"></button> -->
@@ -70,37 +70,38 @@
                     <div  class="d-flex gap-5 ">
                         <div class="w-100">
                             <label for="" class="text-bold">Prenom</label><br>
-                            <input type="text">
+                            <input type="text" id="ajoutPrenom">
                         </div>
 
                         <div class="w-100">
                             <label for="" class="text-bold">Nom</label><br>
-                            <input type="text" class="">
+                            <input type="text" class="" id="ajoutNom">
                       </div>
                     </div>
             
                     <div class="d-flex mt-3 gap-5 ">
                         <div class="w-100">
                             <label for="" class="text-bold">Age</label><br>
-                            <input type="text" class="">
+                            <input type="text" class="" id="ajoutAge">
                         </div>
 
                         <div class="w-100">
                             <label for="" class="text-bold">Note</label><br>
-                            <input type="text" class="">
+                            <input type="text" class="" id="ajoutNote">
                         </div>
                     </div>
-            </form>
-        </div>
-                </div>
+                    <div class="modal-footer">
+                        <!-- <button type="button"class="btn btn-secondary" id="closeModal"
+                         data-bs-dismiss="modal">Fermer</button> -->
 
-        <div class="modal-footer">
-            <button type="button"class="btn btn-secondary" id="closeModal"
-             data-bs-dismiss="modal">Fermer</button>
-            <button type="submit" class="btn btn-primary" id="envoyerModal">Envoyer</button>
-             </div>
+                        <button type="button" class="btn btn-secondary" id="fermerModal">Fermer</button>
+                        <button class="btn btn-primary" id="envoyerModal">Envoyer</button>
+                         </div>
+                </form>
+                  </div>
                 </div>
-            </div>
+                </div>
+              </div>
        
 
 
@@ -122,10 +123,10 @@
             <h3>Moyenne générale: <span id="MoyGen"></span></h3>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-    <script src="script.js"></script>
-     <!-- <script src="script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script> -->
+   <!-- Liens vers les bibliothèques JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="script.js"></script>
+
 </body>
 </html> 

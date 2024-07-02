@@ -1,33 +1,23 @@
-const students = [
-    {nom: "Mbacke",prenom: "Fatima", note: 12, age :19},
-    {nom: "Mbacke",prenom: "Moustapha", note: 20, age :22},
-    {nom: "Mbacke",prenom: "Cheikhouna", note: 18, age :16},
-    {nom: "Mbacke",prenom: "Elhadji", note: 16, age :23},
-    {nom: "Mbacke",prenom: "Mariama", note: 14, age :25},
-    {nom: "Mbacke",prenom: "Mountakha", note: 6, age :24},
-    {nom: "Mbacke",prenom: "Khadija", note: 17, age :18},
-    {nom: "Mbacke",prenom: "Zeynab", note: 8, age :17},
-    {nom: "Mbacke",prenom: "Maimouna", note: 15, age :12},
-    {nom: "Mbacke",prenom: "Saliou", note: 19, age :15},
+// Tableau des étudiants (supposons qu'il est déjà défini)
+let students = JSON.parse(localStorage.getItem('students'))
+||[
+    // { nom: "Mbacke", prenom: "Fatima", note: 12, age: 19 },
+    // { nom: "Mbacke", prenom: "Moustapha", note: 20, age: 22 },
+    // { nom: "Mbacke", prenom: "Cheikhouna", note: 18, age: 16 },
+    // ... autres étudiants
 ];
+
 const NbreEtudiantsPage = 5;
 let PageCurrent = 1;
 
-function Moyenne(){
-    let Total= 0;
-    for ( const student of students) {
+// Fonction pour calculer la moyenne des notes
+function Moyenne() {
+    let Total = 0;
+    for (const student of students) {
         Total += student.note;
     }
     return Total / students.length;
 }
-
-// // utliser la boucle for pour afficher
-// for (let i = 0; i < EtudiantAffiche.length; i++) {
-//     const student = EtudiantAffiche[i];
-//     const tr = document.createElement('tr');
-//     tr.innerHTML = `<td>${student.nom}</td><td>${student.prenom}</td><td>${student.note}</td><td>${student.age}</td> `;
-//     tbody.appendChild(tr);
-// }
 
 // Définir les icônes comme des balises HTML
 const supprimer = '<i class="fa-solid fa-trash fs-4 text-danger cursor-pointer"></i>';
@@ -52,81 +42,120 @@ function AfficheEtudiant(EtudiantAffiche) {
         // Ajouter des événements pour les icônes de modification et de suppression
         const deleteIcon = tr.querySelector('.fa-trash');
         deleteIcon.addEventListener('click', () => {
-            // Ajoutez ici la logique pour supprimer l'étudiant
             const index = students.indexOf(student);
             if (index !== -1) {
                 students.splice(index, 1); // Supprime l'étudiant du tableau students
+                localStorage.setItem('students', JSON.stringify(students));
                 filtre(); // Met à jour l'affichage
             }
         });
 
         const editIcon = tr.querySelector('.fa-pen-to-square');
         editIcon.addEventListener('click', () => {
-            // Ajoutez ici la logique pour modifier l'étudiant
-            // Vous pouvez ouvrir un formulaire de modification ou faire d'autres actions nécessaires
             console.log('Modifier étudiant:', student);
+            // Ajouter ici la logique pour modifier l'étudiant
+            // Par exemple, ouvrir un formulaire de modification
+            editIcon.addEventListener('click', () => {
+                // Pré-remplir le formulaire avec les données de l'étudiant sélectionné
+                document.getElementById('ajoutPrenom').value = student.prenom;
+                document.getElementById('ajoutNom').value = student.nom;
+                document.getElementById('ajoutAge').value = student.age;
+                document.getElementById('ajoutNote').value = student.note;
+            
+                // Afficher le modal de modification (si nécessaire)
+                modal.style.display = 'block';
+                envoyerModal.replaceWith(envoyerModal.cloneNode(true));
+                envoyerModal=document.getElementById('envoyerModal')
+
+                // Écouter l'événement de soumission du formulaire de modification
+                document.getElementById('envoyerModal').addEventListener('click', () => {
+                    // Mettre à jour les données de l'étudiant sélectionné
+                    student.prenom = document.getElementById('ajoutPrenom').value;
+                    student.nom = document.getElementById('ajoutNom').value;
+                    student.age = parseInt(document.getElementById('ajoutAge').value);
+                    student.note = parseInt(document.getElementById('ajoutNote').value);
+                    // Mettre à jour les données dans le tableau students
+                    localStorage.setItem('students', JSON.stringify(students));
+            
+                    // Mettre à jour l'affichage des étudiants et recalculer la pagination
+                    filtre();
+            
+                    // Fermer le modal après la modification
+                    modal.style.display = 'none';
+                });
+            });
+            
         });
     });
 }
-
-// Assurez-vous que votre fonction `filtre()` est correctement définie pour filtrer et afficher les étudiants
-// Elle devrait appeler `AfficheEtudiant` pour mettre à jour le tableau après chaque modification ou filtrage.
-
-// Assurez-vous également d'initialiser votre page correctement, par exemple en appelant `filtre()` lors du chargement de la page.
-window.onload = filtre;
+// afficher modal
+const  modal = document.getElementById('modal')
 
 
-// const supprimer = '<i class="fa-solid fa-trash fs-4 text-danger "></i>'
-// const modifier = '<i class="fa-solid fa-pen-to-square fs-4 text-warning ms-3"></i>'
-// console.log(supprimer);
 
-// fontions pour afficher les etudiants
-// function AfficheEtudiant(EtudiantAffiche){
-//     const tbody = document.getElementById('Tbody');
-//     tbody.innerHTML= '';
+// Soumission du formulaire pour ajouter un nouvel étudiant
+// Ouvrir le modal lorsque le bouton "Ajouter" est cliqué
 
-// // une autre utilisation de map
-// EtudiantAffiche.map(student => {
-//     const tr = document.createElement('tr');
-//     tr.innerHTML = `<td>${student.nom}</td><td>${student.prenom}</td><td>${student.note}</td><td>${student.age}</td><td>${supprimer} ${modifier}</td>`;
-//     tbody.appendChild(tr);
+document.getElementById('bouttonAjout').addEventListener('click', function (event) {
+    event.preventDefault(); // Empêcher le rechargement de la page
+    modal.style.display='block';
+});
 
-    
-// });
-// }
-// utliser la boucle for pour afficher
-// for (let i = 0; i < EtudiantAffiche.length; i++) {
-//     const student = EtudiantAffiche[i];
-//     const tr = document.createElement('tr');
-//     tr.innerHTML = `<td>${student.nom}</td><td>${student.prenom}</td><td>${student.note}</td><td>${student.age}</td> `;
-//     tbody.appendChild(tr);
-// }
+// fermer modal
+document.getElementById('fermerModal').addEventListener('click', () => {
+    modal.style.display = 'none';
+    viderChamp(); // Réinitialiser les champs du formulaire si nécessaire
+});
 
-// paginations
-function pagination (EtudiantPagination){
-    const pagination =document.getElementById('pagination');
-    pagination.innerHTML='';
+   // un autre evenement pour fermer le modal à partir du bouton fermer 
+//    document.getElementById('closeModal').addEventListener('click', () =>{
+//     modal.style.display='none';
+//     viderChamp()
+// })
 
-    const pageCount = EtudiantPagination.length / NbreEtudiantsPage;
+document.getElementById('envoyerModal').addEventListener('click', () => {
+    // Récupérer les valeurs du formulaire
+    const ajoutPrenom = document.getElementById('ajoutPrenom').value;
+    const ajoutNom = document.getElementById('ajoutNom').value;
+    const ajoutAge = parseInt(document.getElementById('ajoutAge').value);
+    const ajoutNote = parseInt(document.getElementById('ajoutNote').value);
 
-    //parcourir le nombre de page (=2) et mettre les liens de switch entre les paginations
-    for (let i = 1; i <= pageCount; i++) {
-        const pageItem = document.createElement('a'); // creer le lien
-        pageItem.href= "a"; // lui mettre le href a #
-        pageItem.className = "page-link"; // lui ajouter un classe.
-        pageItem.innerText = i; // mnt changer le contenu pour le mettre à i c-a-d qu'il va correspondre au nombre d'itération
-        pageItem.onclick = function(event){ //afficher la page correspondant au click du lien
-            event.preventDefault();
-            PageCurrent = i;
-            filtre()
-        };  
-        const pageLi = document.createElement('li');
-        pageLi.className = "page-item";
-        pageLi.appendChild(pageItem);
-        pagination.appendChild(pageLi)
+    // Valider les données du formulaire
+    if (ajoutPrenom === '' || ajoutNom === '' || isNaN(ajoutAge) || isNaN(ajoutNote)) {
+        alert("Veuillez remplir tous les champs avec des valeurs valides.");
+    }else{
+           // Créer un nouvel objet étudiant
+    const newStudent = {
+        nom: ajoutNom,
+        prenom: ajoutPrenom,
+        age: ajoutAge,
+        note: ajoutNote
+    };
+
+    // Ajouter le nouvel étudiant au tableau 'students'
+    students.push(newStudent);
+
+ 
+
+    // Mettre à jour l'affichage des étudiants et recalculer la pagination
+    localStorage.setItem('students', JSON.stringify(students));
+
+    // viderChamp();
+    filtre();
+    // modal.style.display = 'none';
+    PageCurrent = 1; // Retour à la première page après l'ajout
+    // filtre();
     }
-}
- function filtre (){
+
+
+});  
+
+
+
+
+
+// Fonction de filtrage des étudiants
+function filtre() {
     const searchInput = document.getElementById('searchInput').value.toLowerCase();
     const EtudiantFiltres = students.filter(student =>
         student.nom.toLowerCase().includes(searchInput) || student.prenom.toLowerCase().includes(searchInput)
@@ -137,78 +166,38 @@ function pagination (EtudiantPagination){
 
     AfficheEtudiant(EtudiantAffiche);
     pagination(EtudiantFiltres);
-    document.getElementById('MoyGen').innerText = Moyenne();
- }
+    document.getElementById('MoyGen').innerText = Moyenne().toFixed(2);
+}
 
- document.getElementById('searchInput').addEventListener('input', () =>{
-    PageCurrent= 1
-    filtre();
- });
+// Initialiser l'affichage des étudiants au chargement de la page
+window.onload =  filtre();
 
- window.onload = filtre;
+// Fonction pour afficher la pagination
+function pagination(EtudiantPagination) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
 
-//  afficher le modal 
-// let buttonAjout = document.getElementById('bouttonAjout')
-// let modal = document.getElementById('modal')
-// console.log(buttonAjout);
+    const pageCount = Math.ceil(EtudiantPagination.length / NbreEtudiantsPage);
 
-// // evenment pour afficher le modal a partir du button ajouter
-// buttonAjout.addEventListener('click', () =>{
-//     modal.style.display="block";
+    // Parcourir le nombre de pages et créer les liens de pagination
+    for (let i = 1; i <= pageCount; i++) {
+        const pageItem = document.createElement('a');
+        pageItem.href = "#"; // Lien vide pour l'exemple
+        pageItem.className = "page-link";
+        pageItem.innerText = i;
+        pageItem.onclick = function (event) {
+            event.preventDefault();
+            PageCurrent = i;
+            filtre();
+        };
+        const pageLi = document.createElement('li');
+        pageLi.className = "page-item";
+        pageLi.appendChild(pageItem);
+        pagination.appendChild(pageLi);
+    }
+}
 
-//     // fonction autre evenments pour fermer le modal à partir du button former
-//     document.getElementById('closeModal').addEventListener('click', () => {
-//         modal.style.display="none"
-//     });
-// });
-
-// Ouvrir le modal lorsque le bouton "Ajouter" est cliqué
-let buttonAjout = document.getElementById('bouttonAjout');
-let modal = new bootstrap.Modal(document.getElementById('modal'));
-
-buttonAjout.addEventListener('click', () => {
-    modal.show();
-});
-
-// Écouter l'événement de soumission du formulaire
-document.getElementById('envoyerModal').addEventListener('click', (event) => {
-    event.preventDefault(); // Empêcher la soumission du formulaire par défaut (si utilisé)
-
-    // Récupérer les valeurs du formulaire (à compléter avec les IDs appropriés)
-    const prenom = document.getElementById('prenom').value.trim();
-    const nom = document.getElementById('nom').value.trim();
-    const age = document.getElementById('age').value.trim();
-    const note = document.getElementById('note').value.trim();
-
-    // Valider les données du formulaire si nécessaire
-
-    // Ajouter votre logique pour enregistrer les données (localStorage, etc.)
-    
-    // Réinitialiser le formulaire (à adapter avec les IDs appropriés)
-    document.getElementById('prenom').value = '';
-    document.getElementById('nom').value = '';
-    document.getElementById('age').value = '';
-    document.getElementById('note').value = '';
-
-    // Fermer le modal après la soumission du formulaire
-    modal.hide();
-
-        // Ajouter l'étudiant au tableau 'students'
-        students.push({ nom: nom, prenom: prenom, note: parseInt(note), age: parseInt(age) });
-
-        // Réafficher les étudiants et recalculer la pagination
-        PageCurrent = 1; // Retour à la première page après l'ajout
-        filtre();
-    
-});
-
-// // Réinitialiser le formulaire et fermer le modal lorsque celui-ci est complètement caché
-// modal.element.addEventListener('hidden.bs.modal', () => {
-//     // Réinitialiser le formulaire ici si nécessaire
-// });
-
-
-// fonctions somme des notes 
+// // fonctions somme des notes 
 function SommeNote () {
     let totalNote = 0
     for (const chaqueNote of students){
@@ -222,7 +211,7 @@ let resultCard1 = document.getElementById('card1')
 resultCard1.innerText = SommeNote();
 
 
-// fonctions somme des ages
+// // fonctions somme des ages
 function SommeAge () {
     let totalAge = 0
     for(const chaqueAge of students){
@@ -248,4 +237,4 @@ function compterAge (){
 }
 const NbreAge= compterAge(students)
     let resultCard4 = document.getElementById('card4')
-    resultCard4.innerText="Le nombre de ages est égale à" + compterAge(students)
+    resultCard4.innerText="Le nombre de ages est égale à " + compterAge(students)
