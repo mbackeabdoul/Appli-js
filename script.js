@@ -1,16 +1,39 @@
-// Tableau des étudiants (supposons qu'il est déjà défini)
-let students = JSON.parse(localStorage.getItem('students'))
-||[
-    // { nom: "Mbacke", prenom: "Fatima", note: 12, age: 19 },
-    // { nom: "Mbacke", prenom: "Moustapha", note: 20, age: 22 },
-    // { nom: "Mbacke", prenom: "Cheikhouna", note: 18, age: 16 },
-    // ... autres étudiants
-];
+// Importation des modules Firebase nécessaires pour l'application
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { setDoc, doc, getFirestore, getDoc, getDocs, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const NbreEtudiantsPage = 5;
-let PageCurrent = 1;
+// Configuration de Firebase pour se connecter à la base de données Firestore
+const firebaseConfig = {
+    authDomain: "projets-validation.firebaseapp.com",
+    projectId: "projets-validation",
+    storageBucket: "projets-validation.appspot.com",
+    messagingSenderId: "297716729138",
+    appId: "1:297716729138:web:3315736ade8ba12957c32b",
+};
 
-// Fonction pour calculer la moyenne des notes
+// Initialisation de Firebase avec la configuration donnée
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Initialisation des variables globales
+let students = [];
+const NbreEtudiantsPage = 5; // Nombre d'étudiants par page
+let PageCurrent = 1; // Page courante pour la pagination
+
+// Fonction pour récupérer les étudiants depuis Firestore
+async function fetchStudents() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "students"));
+        querySnapshot.forEach((doc) => {
+            students.push(doc.data());
+        });
+        filtre(); // Filtrer et afficher les étudiants après récupération
+    } catch (error) {
+        console.error("Error fetching students: ", error);
+    }
+}
+
+// Fonction pour calculer la moyenne des notes des étudiants
 function Moyenne() {
     let Total = 0;
     for (const student of students) {
@@ -19,11 +42,11 @@ function Moyenne() {
     return Total / students.length;
 }
 
-// Définir les icônes comme des balises HTML
+// Icônes pour les actions de suppression et modification
 const supprimer = '<i class="fa-solid fa-trash fs-4 text-danger cursor-pointer"></i>';
 const modifier = '<i class="fa-solid fa-pen-to-square fs-4 text-warning ms-3 cursor-pointer"></i>';
 
-// Fonction pour afficher les étudiants dans le tableau
+// Fonction pour afficher les étudiants dans le tableau HTML
 function AfficheEtudiant(EtudiantAffiche) {
     const tbody = document.getElementById('Tbody');
     tbody.innerHTML = '';
@@ -39,122 +62,99 @@ function AfficheEtudiant(EtudiantAffiche) {
         `;
         tbody.appendChild(tr);
 
-        // Ajouter des événements pour les icônes de modification et de suppression
-        const deleteIcon = tr.querySelector('.fa-trash');
-        deleteIcon.addEventListener('click', () => {
-            const index = students.indexOf(student);
-            if (index !== -1) {
-                students.splice(index, 1); // Supprime l'étudiant du tableau students
-                localStorage.setItem('students', JSON.stringify(students));
-                filtre(); // Met à jour l'affichage
-            }
-        });
+        // Gestionnaire d'événement pour la suppression d'un étudiant
+        // const deleteIcon = tr.querySelector('.fa-trash');
+        // deleteIcon.addEventListener('click', async () => {
+        //     const index = students.indexOf(student);
+        //     if (index !== -1) {
+        //         students.splice(index, 1);
+        //         await setDoc(doc(db, "students", student.id), student, { merge: true });
+        //         filtre();
+        //     }
+        // });
+        // Gestionnaire d'événement pour la suppression d'un étudiant
+    const deleteIcon = tr.querySelector('.fa-trash');
+    deleteIcon.addEventListener('click', async () => {
+     const index = students.indexOf(student);
+      if (index !== -1) {
+        try {
+            await deleteDoc(doc(db, "students", student.id)); // Suppression de l'étudiant dans Firestore
+            students.splice(index, 1); // Suppression de l'étudiant du tableau local
+            filtre(); // Mise à jour de l'affichage
+        } catch (error) {
+            console.error("Error deleting student: ", error);
+        }
+    }
+});
 
+        // Gestionnaire d'événement pour la modification d'un étudiant
         const editIcon = tr.querySelector('.fa-pen-to-square');
         editIcon.addEventListener('click', () => {
-            console.log('Modifier étudiant:', student);
-            // Ajouter ici la logique pour modifier l'étudiant
-            // Par exemple, ouvrir un formulaire de modification
-            editIcon.addEventListener('click', () => {
-                // Pré-remplir le formulaire avec les données de l'étudiant sélectionné
-                document.getElementById('ajoutPrenom').value = student.prenom;
-                document.getElementById('ajoutNom').value = student.nom;
-                document.getElementById('ajoutAge').value = student.age;
-                document.getElementById('ajoutNote').value = student.note;
-            
-                // Afficher le modal de modification (si nécessaire)
-                modal.style.display = 'block';
-                envoyerModal.replaceWith(envoyerModal.cloneNode(true));
-                envoyerModal=document.getElementById('envoyerModal')
+            document.getElementById('ajoutPrenom').value = student.prenom;
+            document.getElementById('ajoutNom').value = student.nom;
+            document.getElementById('ajoutAge').value = student.age;
+            document.getElementById('ajoutNote').value = student.note;
 
-                // Écouter l'événement de soumission du formulaire de modification
-                document.getElementById('envoyerModal').addEventListener('click', () => {
-                    // Mettre à jour les données de l'étudiant sélectionné
-                    student.prenom = document.getElementById('ajoutPrenom').value;
-                    student.nom = document.getElementById('ajoutNom').value;
-                    student.age = parseInt(document.getElementById('ajoutAge').value);
-                    student.note = parseInt(document.getElementById('ajoutNote').value);
-                    // Mettre à jour les données dans le tableau students
-                    localStorage.setItem('students', JSON.stringify(students));
-            
-                    // Mettre à jour l'affichage des étudiants et recalculer la pagination
-                    filtre();
-            
-                    // Fermer le modal après la modification
-                    modal.style.display = 'none';
-                });
+            modal.style.display = 'block';
+            envoyerModal.replaceWith(envoyerModal.cloneNode(true));
+            envoyerModal = document.getElementById('envoyerModal');
+
+            document.getElementById('envoyerModal').addEventListener('click', async () => {
+                student.prenom = document.getElementById('ajoutPrenom').value;
+                student.nom = document.getElementById('ajoutNom').value;
+                student.age = parseInt(document.getElementById('ajoutAge').value);
+                student.note = parseInt(document.getElementById('ajoutNote').value);
+                await setDoc(doc(db, "students", student.id), student);
+                filtre();
+                modal.style.display = 'none';
+                
             });
-            
         });
     });
 }
-// afficher modal
-const  modal = document.getElementById('modal')
 
-
-
-// Soumission du formulaire pour ajouter un nouvel étudiant
-// Ouvrir le modal lorsque le bouton "Ajouter" est cliqué
-
+// Gestion du modal d'ajout/modification d'un étudiant
+const modal = document.getElementById('modal');
 document.getElementById('bouttonAjout').addEventListener('click', function (event) {
-    event.preventDefault(); // Empêcher le rechargement de la page
-    modal.style.display='block';
+    event.preventDefault();
+    modal.style.display = 'block';
 });
-
-// fermer modal
 document.getElementById('fermerModal').addEventListener('click', () => {
     modal.style.display = 'none';
-    viderChamp(); // Réinitialiser les champs du formulaire si nécessaire
+    viderChamp();
 });
 
-   // un autre evenement pour fermer le modal à partir du bouton fermer 
-//    document.getElementById('closeModal').addEventListener('click', () =>{
-//     modal.style.display='none';
-//     viderChamp()
-// })
-
-document.getElementById('envoyerModal').addEventListener('click', () => {
-    // Récupérer les valeurs du formulaire
+// Gestionnaire d'événement pour l'ajout d'un nouvel étudiant
+let envoyerModal = document.getElementById('envoyerModal')
+envoyerModal.addEventListener('click', async () => {
     const ajoutPrenom = document.getElementById('ajoutPrenom').value;
     const ajoutNom = document.getElementById('ajoutNom').value;
     const ajoutAge = parseInt(document.getElementById('ajoutAge').value);
     const ajoutNote = parseInt(document.getElementById('ajoutNote').value);
 
-    // Valider les données du formulaire
     if (ajoutPrenom === '' || ajoutNom === '' || isNaN(ajoutAge) || isNaN(ajoutNote)) {
         alert("Veuillez remplir tous les champs avec des valeurs valides.");
-    }else{
-           // Créer un nouvel objet étudiant
-    const newStudent = {
-        nom: ajoutNom,
-        prenom: ajoutPrenom,
-        age: ajoutAge,
-        note: ajoutNote
-    };
+    } else {
+        const newStudent = {
+            nom: ajoutNom,
+            prenom: ajoutPrenom,
+            age: ajoutAge,
+            note: ajoutNote,
+        };
 
-    // Ajouter le nouvel étudiant au tableau 'students'
-    students.push(newStudent);
-
- 
-
-    // Mettre à jour l'affichage des étudiants et recalculer la pagination
-    localStorage.setItem('students', JSON.stringify(students));
-
-    // viderChamp();
-    filtre();
-    // modal.style.display = 'none';
-    PageCurrent = 1; // Retour à la première page après l'ajout
-    // filtre();
+        const docRef = doc(collection(db, "students"));
+        await setDoc(docRef, { ...newStudent, id: docRef.id });
+        students.push({ ...newStudent, id: docRef.id });
+        localStorage.setItem('students', JSON.stringify(students));
+        filtre();
+        PageCurrent = 1;
     }
+    modal.style.display = 'none';
+    viderChamp();
+    
+});
 
-
-});  
-
-
-
-
-
-// Fonction de filtrage des étudiants
+// Fonction pour filtrer les étudiants affichés en fonction de la recherche et de la pagination
 function filtre() {
     const searchInput = document.getElementById('searchInput').value.toLowerCase();
     const EtudiantFiltres = students.filter(student =>
@@ -167,22 +167,34 @@ function filtre() {
     AfficheEtudiant(EtudiantAffiche);
     pagination(EtudiantFiltres);
     document.getElementById('MoyGen').innerText = Moyenne().toFixed(2);
+    // Affichage de la somme des notes dans le premier card
+    let resultCard1 = document.getElementById('card1');
+    resultCard1.innerText = SommeNote();
+
+    // Affichage de la somme des âges dans le deuxième card
+    let resultCard2 = document.getElementById('card2');
+    resultCard2.innerText = "La somme des âges est égale à " + SommeAge();
+
+    // Affichage du nombre de notes dans le troisième card
+    let resultCard3 = document.getElementById('card3');
+    resultCard3.innerText = "Le nombre de notes est égal à " + compterNotes(students);
+
+    // Affichage du nombre d'étudiants dans le quatrième card
+    let resultCard4 = document.getElementById('card4');
+    resultCard4.innerText = "Le nombre d'âges est égal à " + compterAge(students);
+
 }
 
-// Initialiser l'affichage des étudiants au chargement de la page
-window.onload =  filtre();
-
-// Fonction pour afficher la pagination
+// Fonction pour gérer la pagination des étudiants
 function pagination(EtudiantPagination) {
     const pagination = document.getElementById('pagination');
     pagination.innerHTML = '';
 
     const pageCount = Math.ceil(EtudiantPagination.length / NbreEtudiantsPage);
 
-    // Parcourir le nombre de pages et créer les liens de pagination
     for (let i = 1; i <= pageCount; i++) {
         const pageItem = document.createElement('a');
-        pageItem.href = "#"; // Lien vide pour l'exemple
+        pageItem.href = "#";
         pageItem.className = "page-link";
         pageItem.innerText = i;
         pageItem.onclick = function (event) {
@@ -197,44 +209,273 @@ function pagination(EtudiantPagination) {
     }
 }
 
-// // fonctions somme des notes 
-function SommeNote () {
-    let totalNote = 0
-    for (const chaqueNote of students){
-        totalNote += chaqueNote.note
-    }
-    return totalNote
+// Fonction pour vider les champs du formulaire modal
+function viderChamp() {
+    document.getElementById('ajoutPrenom').value = '';
+    document.getElementById('ajoutNom').value = '';
+    document.getElementById('ajoutAge').value = '';
+    document.getElementById('ajoutNote').value = '';
 }
-console.log(SommeNote());
 
-let resultCard1 = document.getElementById('card1')
-resultCard1.innerText = SommeNote();
-
-
-// // fonctions somme des ages
-function SommeAge () {
-    let totalAge = 0
-    for(const chaqueAge of students){
-        totalAge += chaqueAge.age
+// Fonction pour calculer la somme des notes des étudiants
+function SommeNote() {
+    let totalNote = 0;
+    for (const chaqueNote of students) {
+        totalNote += chaqueNote.note;
     }
-    return totalAge
+    return totalNote;
+}
 
-}console.log(SommeAge());
-let resultCard2 = document.getElementById('card2')
-resultCard2.innerText = "La somme des ages est égal à " +SommeAge()
 
-// fonctions nombre de notes
-function compterNotes () {
+// Fonction pour calculer la somme des âges des étudiants
+function SommeAge() {
+    let totalAge = 0;
+    for (const chaqueAge of students) {
+        totalAge += chaqueAge.age;
+    }
+    return totalAge;
+}
+
+
+// Fonction pour compter le nombre de notes des étudiants
+function compterNotes() {
     return students.length;
 }
-const NbreNote = compterNotes(students)
-let resultCard3 = document.getElementById('card3')
-resultCard3.innerText = "le nombre de note est égal à " +compterNotes(students);
 
-// fonctions nombre d'ages
-function compterAge (){
+
+// Fonction pour compter le nombre d'étudiants
+function compterAge() {
     return students.length;
 }
-const NbreAge= compterAge(students)
-    let resultCard4 = document.getElementById('card4')
-    resultCard4.innerText="Le nombre de ages est égale à " + compterAge(students)
+
+// Chargement des étudiants au chargement de la page
+window.onload = fetchStudents;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // Importation des modules Firebase nécessaires pour l'application
+
+// import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+// import { setDoc, doc, getFirestore, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// const firebaseConfig = {
+//     authDomain: "projets-validation.firebaseapp.com",
+//     projectId: "projets-validation",
+//     storageBucket: "projets-validation.appspot.com",
+//     messagingSenderId: "297716729138",
+//     appId: "1:297716729138:web:3315736ade8ba12957c32b",
+// };
+
+// const app = initializeApp(firebaseConfig);
+// const db = getFirestore(app);
+
+// let students = [];
+// const NbreEtudiantsPage = 5;
+// let PageCurrent = 1;
+
+// async function fetchStudents() {
+//     try {
+//         const querySnapshot = await getDocs(collection(db, "students"));
+//         querySnapshot.forEach((doc) => {
+//             students.push(doc.data());
+//         });
+//         filtre();
+//     } catch (error) {
+//         console.error("Error fetching students: ", error);
+//     }
+// }
+
+// function Moyenne() {
+//     let Total = 0;
+//     for (const student of students) {
+//         Total += student.note;
+//     }
+//     return Total / students.length;
+// }
+
+// const supprimer = '<i class="fa-solid fa-trash fs-4 text-danger cursor-pointer"></i>';
+// const modifier = '<i class="fa-solid fa-pen-to-square fs-4 text-warning ms-3 cursor-pointer"></i>';
+
+// function AfficheEtudiant(EtudiantAffiche) {
+//     const tbody = document.getElementById('Tbody');
+//     tbody.innerHTML = '';
+
+//     EtudiantAffiche.forEach(student => {
+//         const tr = document.createElement('tr');
+//         tr.innerHTML = `
+//             <td>${student.nom}</td>
+//             <td>${student.prenom}</td>
+//             <td>${student.note}</td>
+//             <td>${student.age}</td>
+//             <td>${modifier} ${supprimer}</td>
+//         `;
+//         tbody.appendChild(tr);
+
+//         const deleteIcon = tr.querySelector('.fa-trash');
+//         deleteIcon.addEventListener('click', async () => {
+//             const index = students.indexOf(student);
+//             if (index !== -1) {
+//                 students.splice(index, 1);
+//                 await setDoc(doc(db, "students", student.id), student, { merge: true });
+//                 filtre();
+//             }
+//         });
+
+//         const editIcon = tr.querySelector('.fa-pen-to-square');
+//         editIcon.addEventListener('click', () => {
+//             document.getElementById('ajoutPrenom').value = student.prenom;
+//             document.getElementById('ajoutNom').value = student.nom;
+//             document.getElementById('ajoutAge').value = student.age;
+//             document.getElementById('ajoutNote').value = student.note;
+
+//             modal.style.display = 'block';
+//             envoyerModal.replaceWith(envoyerModal.cloneNode(true));
+//             envoyerModal = document.getElementById('envoyerModal');
+
+//             document.getElementById('envoyerModal').addEventListener('click', async () => {
+//                 student.prenom = document.getElementById('ajoutPrenom').value;
+//                 student.nom = document.getElementById('ajoutNom').value;
+//                 student.age = parseInt(document.getElementById('ajoutAge').value);
+//                 student.note = parseInt(document.getElementById('ajoutNote').value);
+//                 await setDoc(doc(db, "students", student.id), student);
+//                 filtre();
+//                 modal.style.display = 'none';
+//             });
+//         });
+//     });
+// }
+
+// const modal = document.getElementById('modal');
+
+// document.getElementById('bouttonAjout').addEventListener('click', function (event) {
+//     event.preventDefault();
+//     modal.style.display = 'block';
+// });
+
+// document.getElementById('fermerModal').addEventListener('click', () => {
+//     modal.style.display = 'none';
+//     viderChamp();
+// });
+
+// document.getElementById('envoyerModal').addEventListener('click', async () => {
+//     const ajoutPrenom = document.getElementById('ajoutPrenom').value;
+//     const ajoutNom = document.getElementById('ajoutNom').value;
+//     const ajoutAge = parseInt(document.getElementById('ajoutAge').value);
+//     const ajoutNote = parseInt(document.getElementById('ajoutNote').value);
+
+//     if (ajoutPrenom === '' || ajoutNom === '' || isNaN(ajoutAge) || isNaN(ajoutNote)) {
+//         alert("Veuillez remplir tous les champs avec des valeurs valides.");
+//     } else {
+//         const newStudent = {
+//             nom: ajoutNom,
+//             prenom: ajoutPrenom,
+//             age: ajoutAge,
+//             note: ajoutNote,
+//         };
+
+//         const docRef = doc(collection(db, "students"));
+//         await setDoc(docRef, { ...newStudent, id: docRef.id });
+//         students.push({ ...newStudent, id: docRef.id });
+//         localStorage.setItem('students', JSON.stringify(students));
+//         filtre();
+//         PageCurrent = 1;
+//     }
+// });
+
+// function filtre() {
+//     const searchInput = document.getElementById('searchInput').value.toLowerCase();
+//     const EtudiantFiltres = students.filter(student =>
+//         student.nom.toLowerCase().includes(searchInput) || student.prenom.toLowerCase().includes(searchInput)
+//     );
+
+//     const startIndex = (PageCurrent - 1) * NbreEtudiantsPage;
+//     const EtudiantAffiche = EtudiantFiltres.slice(startIndex, startIndex + NbreEtudiantsPage);
+
+//     AfficheEtudiant(EtudiantAffiche);
+//     pagination(EtudiantFiltres);
+//     document.getElementById('MoyGen').innerText = Moyenne().toFixed(2);
+// }
+
+// function pagination(EtudiantPagination) {
+//     const pagination = document.getElementById('pagination');
+//     pagination.innerHTML = '';
+
+//     const pageCount = Math.ceil(EtudiantPagination.length / NbreEtudiantsPage);
+
+//     for (let i = 1; i <= pageCount; i++) {
+//         const pageItem = document.createElement('a');
+//         pageItem.href = "#";
+//         pageItem.className = "page-link";
+//         pageItem.innerText = i;
+//         pageItem.onclick = function (event) {
+//             event.preventDefault();
+//             PageCurrent = i;
+//             filtre();
+//         };
+//         const pageLi = document.createElement('li');
+//         pageLi.className = "page-item";
+//         pageLi.appendChild(pageItem);
+//         pagination.appendChild(pageLi);
+//     }
+// }
+
+// function viderChamp() {
+//     document.getElementById('ajoutPrenom').value = '';
+//     document.getElementById('ajoutNom').value = '';
+//     document.getElementById('ajoutAge').value = '';
+//     document.getElementById('ajoutNote').value = '';
+// }
+
+// function SommeNote() {
+//     let totalNote = 0;
+//     for (const chaqueNote of students) {
+//         totalNote += chaqueNote.note;
+//     }
+//     return totalNote;
+// }
+
+// let resultCard1 = document.getElementById('card1');
+// resultCard1.innerText = SommeNote();
+
+// function SommeAge() {
+//     let totalAge = 0;
+//     for (const chaqueAge of students) {
+//         totalAge += chaqueAge.age;
+//     }
+//     return totalAge;
+// }
+
+// let resultCard2 = document.getElementById('card2');
+// resultCard2.innerText = "La somme des âges est égale à " + SommeAge();
+
+// function compterNotes() {
+//     return students.length;
+// }
+
+// let resultCard3 = document.getElementById('card3');
+// resultCard3.innerText = "Le nombre de notes est égal à " + compterNotes(students);
+
+// function compterAge() {
+//     return students.length;
+// }
+
+// let resultCard4 = document.getElementById('card4');
+// resultCard4.innerText = "Le nombre d'âges est égal à " + compterAge(students);
+
+// window.onload = fetchStudents;
